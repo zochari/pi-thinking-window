@@ -1,0 +1,42 @@
+{
+  "name": "pi-thinking-window",
+  "version": "0.1.0",
+  "description": "Render Pi's model thinking stream in a fixed-height sliding-window box (TUI).",
+  "type": "module",
+  "license": "MIT",
+  "author": "zochari",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "thinking",
+    "tui",
+    "extension"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zochari/pi-thinking-window.git"
+  },
+  "homepage": "https://github.com/zochari/pi-thinking-window#readme",
+  "bugs": {
+    "url": "https://github.com/zochari/pi-thinking-window/issues"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "!.github"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  }
+}
