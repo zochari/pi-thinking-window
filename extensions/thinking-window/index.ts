@@ -40,7 +40,8 @@ export default function (pi: ExtensionAPI) {
     if (ctx.hasUI) ctx.ui.setHiddenThinkingLabel(HIDDEN_LABEL);
   };
 
-  pi.registerCommand("thinking-window", {
+  try {
+    pi.registerCommand("thinking-window", {
     description:
       "Set box height (/thinking-window <rows>), toggle it (/thinking-window toggle), or show status",
     handler: async (args, ctx) => {
@@ -68,16 +69,23 @@ export default function (pi: ExtensionAPI) {
       repaint(ctx);
       notify(ctx, `Thinking window height set to ${getBoxHeight()}`, "info");
     },
-  });
+    });
+  } catch (error) {
+    console.warn("[thinking-window] command registration skipped:", formatError(error));
+  }
 
-  pi.registerShortcut(parseToggleKey(), {
+  try {
+    pi.registerShortcut(parseToggleKey(), {
     description: "Thinking window: toggle on/off (configurable via config.json toggleKey)",
     handler: async (ctx) => {
       const on = toggleEnabled();
       repaint(ctx);
       notify(ctx, `Thinking window ${on ? "on" : "off"}`, "info");
     },
-  });
+    });
+  } catch (error) {
+    console.warn("[thinking-window] shortcut registration skipped:", formatError(error));
+  }
 
   pi.on("session_start", async (_event, ctx) => {
     try {

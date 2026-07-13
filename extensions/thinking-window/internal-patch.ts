@@ -86,6 +86,7 @@ function collectThinkingBlocks(
 let cleanup: (() => void) | undefined;
 let refCount = 0;
 let installing: Promise<() => void> | undefined;
+const PATCHED = Symbol("thinking-window-patched");
 
 /**
  * Reference-counted install. Returns a release() that restores the original
@@ -134,6 +135,11 @@ async function installPatch(): Promise<() => void> {
   if (!proto || typeof proto.updateContent !== "function") {
     throw new Error("AssistantMessageComponent internals incompatible (missing updateContent).");
   }
+  if ((proto as any)[PATCHED]) {
+    // Already patched (e.g. extension loaded twice via -e . and a global install).
+    // Become a no-op so we don't double-wrap and don't restore someone else's patch.
+    return () => {};
+  }
 
   const originalUpdateContent = proto.updateContent as (message: AssistantMessageLike) => void;
   const originalSetHideThinkingBlock = proto.setHideThinkingBlock as (
@@ -145,19 +151,38 @@ async function installPatch(): Promise<() => void> {
     if (proto.setHideThinkingBlock !== originalSetHideThinkingBlock) {
       proto.setHideThinkingBlock = originalSetHideThinkingBlock;
     }
+    delete (proto as any)[PATCHED];
   };
 
   const safeTheme = getThemeOrFallback(theme);
 
-  const patchedUpdateContent = function (this: any, message: AssistantMessageLike) {
+  const patchedUpdateContent = function (this: any, message: any) {
     this.lastMessage = message;
-    const blocks = collectThinkingBlocks(message);
+    // Guard against malformed/partial messages so we never throw inside the
+    // TUI render path (which would break the whole panel).
+    if (!message || !Array.isArray(message.content)) {
+      return originalUpdateContent.call(this, message);
+    }
+    let blocks: { contentIndex: number; text: string }[];
+    try {
+      blocks = collectThinkingBlocks(message);
+    } catch {
+      return originalUpdateContent.call(this, message);
+    }
     if (blocks.length === 0) {
       // No thinking to box up: keep Pi's native rendering for text/tools.
       return originalUpdateContent.call(this, message);
     }
     // Box disabled: fall back to Pi's native thinking rendering.
     if (!isEnabled()) {
+      return originalUpdateContent.call(this, message);
+    }
+    // If the message carries content we can't faithfully re-render ourselves
+    // (tool calls, etc.), let Pi render natively so nothing is dropped or broken.
+    const onlyHandled = (message.content as ContentLike[]).every(
+      (c) => c.type === "text" || c.type === "thinking",
+    );
+    if (!onlyHandled) {
       return originalUpdateContent.call(this, message);
     }
     try {
@@ -225,7 +250,7 @@ async function installPatch(): Promise<() => void> {
       }
     }
   };
-
+  (proto as any)[PATCHED] = true;
   proto.updateContent = patchedUpdateContent;
   proto.setHideThinkingBlock = patchedSetHideThinkingBlock;
   return restore;
