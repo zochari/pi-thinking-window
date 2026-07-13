@@ -9,7 +9,7 @@ height with `/thinking-window <rows>` or the `THINKING_WINDOW_HEIGHT` env var
 (default 12, min 4). Toggle with `/thinking-window toggle` (or the configured
 shortcut).
 
-![thinking-window demo](https://raw.githubusercontent.com/zochari/pi-thinking-window/61cced2/assets/demo.gif)
+![thinking-window demo](https://raw.githubusercontent.com/zochari/pi-thinking-window/master/assets/demo.gif)
 
 ## Install
 
@@ -75,6 +75,8 @@ native thinking renderer for that session (with a warning) instead of crashing.
 Runtime-patch technique adapted from
 [crustyhacker/pi-thinking-steps](https://github.com/crustyhacker/pi-thinking-steps)
 (MIT).
+
+Scaffolded from [S1M0N38/pi-package-template](https://github.com/S1M0N38/pi-package-template).
 
 ## License
 

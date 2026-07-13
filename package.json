@@ -34,7 +34,7 @@
     "extensions": [
       "./extensions"
     ],
-    "image": "https://raw.githubusercontent.com/zochari/pi-thinking-window/61cced2/assets/demo.gif"
+    "image": "https://raw.githubusercontent.com/zochari/pi-thinking-window/master/assets/demo.gif"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
