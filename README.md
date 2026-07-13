@@ -9,6 +9,8 @@ height with `/thinking-window <rows>` or the `THINKING_WINDOW_HEIGHT` env var
 (default 12, min 4). Toggle with `/thinking-window toggle` (or the configured
 shortcut).
 
+![thinking-window demo](assets/demo.gif)
+
 ## Install
 
 ```bash
