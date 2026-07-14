@@ -177,14 +177,6 @@ async function installPatch(): Promise<() => void> {
     if (!isEnabled()) {
       return originalUpdateContent.call(this, message);
     }
-    // If the message carries content we can't faithfully re-render ourselves
-    // (tool calls, etc.), let Pi render natively so nothing is dropped or broken.
-    const onlyHandled = (message.content as ContentLike[]).every(
-      (c) => c.type === "text" || c.type === "thinking",
-    );
-    if (!onlyHandled) {
-      return originalUpdateContent.call(this, message);
-    }
     try {
       this.contentContainer.clear();
       this.contentContainer.addChild(new Spacer(1));
