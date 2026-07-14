@@ -92,6 +92,12 @@ export default function (pi: ExtensionAPI) {
       release = await retainThinkingWindowPatch();
       if (ctx.hasUI) {
         ctx.ui.setStatus("thinking-window", `box:${getBoxHeight()}${isEnabled() ? "" : " off"}`);
+        // Re-box any messages already painted before the patch landed. Resumed /
+        // switched / forked sessions render history (renderBeforeBind) before
+        // extensions bind, so their thinking was drawn with Pi's native renderer
+        // and shows as raw text. setHiddenThinkingLabel re-runs updateContent on
+        // every AssistantMessageComponent via the now-patched method.
+        repaint(ctx);
       }
     } catch (error) {
         release = undefined;
