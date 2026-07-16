@@ -70,17 +70,10 @@ function hasVisibleThinking(content: ThinkingContentLike): boolean {
   return content.redacted === true || (content.thinking?.trim().length ?? 0) > 0;
 }
 
-function collectThinkingBlocks(
-  message: AssistantMessageLike,
-): { contentIndex: number; text: string }[] {
-  const blocks: { contentIndex: number; text: string }[] = [];
-  message.content.forEach((content, index) => {
-    if (content.type !== "thinking") return;
-    const thinking = content as ThinkingContentLike;
-    if (!hasVisibleThinking(thinking)) return;
-    blocks.push({ contentIndex: index, text: thinking.thinking });
-  });
-  return blocks;
+function hasAnyVisibleThinking(message: AssistantMessageLike): boolean {
+  return message.content.some(
+    (content) => content.type === "thinking" && hasVisibleThinking(content as ThinkingContentLike),
+  );
 }
 
 let cleanup: (() => void) | undefined;
@@ -163,13 +156,13 @@ async function installPatch(): Promise<() => void> {
     if (!message || !Array.isArray(message.content)) {
       return originalUpdateContent.call(this, message);
     }
-    let blocks: { contentIndex: number; text: string }[];
+    let hasThinking: boolean;
     try {
-      blocks = collectThinkingBlocks(message);
+      hasThinking = hasAnyVisibleThinking(message);
     } catch {
       return originalUpdateContent.call(this, message);
     }
-    if (blocks.length === 0) {
+    if (!hasThinking) {
       // No thinking to box up: keep Pi's native rendering for text/tools.
       return originalUpdateContent.call(this, message);
     }
@@ -180,25 +173,35 @@ async function installPatch(): Promise<() => void> {
     try {
       this.contentContainer.clear();
       this.contentContainer.addChild(new Spacer(1));
-      const thinkingText = blocks.map((b) => b.text).join("\n");
-      const firstThinkingIndex = blocks[0].contentIndex;
-      const hasTextAfterThinking = message.content
-        .slice(firstThinkingIndex + 1)
-        .some((c) => c.type === "text" && c.text.trim());
-      let renderedThinking = false;
-      for (const content of message.content) {
+      // Render each thinking segment in its own box, in original content order,
+      // instead of merging every segment into one box - Claude's interleaved
+      // thinking emits separate thinking/toolCall pairs within one message, and
+      // merging them made a finished segment's box keep growing with a later,
+      // unrelated segment's tokens after its own tool call had already rendered.
+      for (let i = 0; i < message.content.length; i++) {
+        const content = message.content[i];
         if (content.type === "text" && content.text.trim()) {
           this.contentContainer.addChild(
             new Markdown(content.text.trim(), 1, 0, this.markdownTheme),
           );
           continue;
         }
-        if (content.type === "thinking" && !renderedThinking) {
+        if (content.type === "thinking" && hasVisibleThinking(content as ThinkingContentLike)) {
+          const hasVisibleContentAfter = message.content
+            .slice(i + 1)
+            .some(
+              (c) =>
+                (c.type === "text" && c.text.trim()) ||
+                (c.type === "thinking" && hasVisibleThinking(c as ThinkingContentLike)),
+            );
           this.contentContainer.addChild(
-            new ThinkingWindowComponent(safeTheme, thinkingText, getBoxHeight()),
+            new ThinkingWindowComponent(
+              safeTheme,
+              (content as ThinkingContentLike).thinking,
+              getBoxHeight(),
+            ),
           );
-          renderedThinking = true;
-          if (hasTextAfterThinking) this.contentContainer.addChild(new Spacer(1));
+          if (hasVisibleContentAfter) this.contentContainer.addChild(new Spacer(1));
         }
       }
 

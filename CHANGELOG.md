@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
 - Fix: box now persists for previous (historical) messages, not just the live one. Resumed / switched / forked sessions render history before the extension binds, so their thinking was painted with Pi's native renderer; a repaint after the patch lands re-boxes them.
 - Fix: turns where the model calls a tool alongside thinking (the common case in agentic sessions) no longer fall back to Pi's native, unboxed thinking renderer. Tool-call content is left for Pi to render elsewhere, as it always was; only the extra bail-out that dropped the whole custom render was removed.
+- Fix: interleaved thinking (thinking, tool call, more thinking, ...) no longer merges every thinking segment in the turn into one box anchored at the first segment. Each segment now gets its own box in original order and freezes once that segment ends, matching Pi's native per-segment rendering; previously a later segment's tokens kept streaming into an earlier, already-answered-looking box after its tool call had already rendered below it.
 
 ## 0.1.0
 

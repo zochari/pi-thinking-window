@@ -1,6 +1,6 @@
 {
   "name": "pi-thinking-window",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Render Pi's model thinking stream in a fixed-height sliding-window box (TUI).",
   "type": "module",
   "license": "MIT",
