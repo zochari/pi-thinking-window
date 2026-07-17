@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Fix: when running under the `pi-cursor-sdk` provider, tool/activity traces that it emits as `thinking` blocks (e.g. "Cursor read did not complete: …") are no longer boxed as model reasoning. They render as a neutral status line instead, so tool activity no longer appears inside the thinking box. Detection is scoped to Cursor's single-line "Cursor <activity>: <summary>" fingerprint, so native providers are unaffected. Toggle with the `cursorActivityFix` setting (default on).
+
 ## 0.1.2
 
 - Fix: adjacent thinking blocks in a single assistant message are coalesced into one box, matching Pi's native updateContent (and its own test suite). The previous per-entry rendering produced "multiple thinking boxes in a row" whenever the content array carried more than one consecutive thinking entry (which it routinely does).

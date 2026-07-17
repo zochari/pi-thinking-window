@@ -26,12 +26,13 @@ export interface ThinkingWindowSettings {
   height?: number;
   enabled?: boolean;
   toggleKey?: string;
-}
+  cursorActivityFix?: boolean;
 
 const DEFAULTS: Required<ThinkingWindowSettings> = {
   height: 12,
   enabled: true,
   toggleKey: "alt+shift+b",
+  cursorActivityFix: true,
 };
 
 const SPECIAL_KEYS = new Set([
@@ -128,6 +129,10 @@ export function getInitialHeight(): number {
 
 export function getInitialEnabled(): boolean {
   return settings.enabled ?? DEFAULTS.enabled;
+}
+
+export function getCursorActivityFix(): boolean {
+  return settings.cursorActivityFix ?? DEFAULTS.cursorActivityFix;
 }
 
 /**
