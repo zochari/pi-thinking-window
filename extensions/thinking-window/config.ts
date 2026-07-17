@@ -27,6 +27,7 @@ export interface ThinkingWindowSettings {
   enabled?: boolean;
   toggleKey?: string;
   cursorActivityFix?: boolean;
+}
 
 const DEFAULTS: Required<ThinkingWindowSettings> = {
   height: 12,
