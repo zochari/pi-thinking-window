@@ -173,11 +173,10 @@ async function installPatch(): Promise<() => void> {
     try {
       this.contentContainer.clear();
       this.contentContainer.addChild(new Spacer(1));
-      // Render each thinking segment in its own box, in original content order,
-      // instead of merging every segment into one box - Claude's interleaved
-      // thinking emits separate thinking/toolCall pairs within one message, and
-      // merging them made a finished segment's box keep growing with a later,
-      // unrelated segment's tokens after its own tool call had already rendered.
+      // Coalesce adjacent thinking blocks into one box (matches Pi's native
+      // updateContent). The message content array routinely carries multiple
+      // adjacent thinking entries, so per-entry boxes produced "multiple
+      // thinking boxes in a row" instead of one.
       for (let i = 0; i < message.content.length; i++) {
         const content = message.content[i];
         if (content.type === "text" && content.text.trim()) {
@@ -186,7 +185,17 @@ async function installPatch(): Promise<() => void> {
           );
           continue;
         }
-        if (content.type === "thinking" && hasVisibleThinking(content as ThinkingContentLike)) {
+        if (content.type === "thinking") {
+          // Merge the run of consecutive thinking entries into a single box.
+          const thinkingBlocks: string[] = [];
+          for (; i < message.content.length; i++) {
+            const tc = message.content[i] as ThinkingContentLike;
+            if (tc.type !== "thinking") break;
+            const t = tc.thinking?.trim();
+            if (t || tc.redacted) thinkingBlocks.push(t ?? "");
+          }
+          i--;
+          if (thinkingBlocks.length === 0) continue;
           const hasVisibleContentAfter = message.content
             .slice(i + 1)
             .some(
@@ -197,7 +206,7 @@ async function installPatch(): Promise<() => void> {
           this.contentContainer.addChild(
             new ThinkingWindowComponent(
               safeTheme,
-              (content as ThinkingContentLike).thinking,
+              thinkingBlocks.join("\n\n"),
               getBoxHeight(),
             ),
           );
@@ -206,6 +215,10 @@ async function installPatch(): Promise<() => void> {
       }
 
       const hasToolCalls = message.content.some((c) => c.type === "toolCall");
+      // Mirror native updateContent: render() uses hasToolCalls to decide OSC133
+      // zone wrapping. Without this, assistant messages with tool calls were still
+      // wrapped in OSC133 zones (hasToolCalls stayed false all session).
+      this.hasToolCalls = hasToolCalls;
       if (!hasToolCalls) {
         if (message.stopReason === "aborted") {
           const abortMessage =

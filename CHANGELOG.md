@@ -1,5 +1,7 @@
-# Changelog
+## 0.1.2
 
+- Fix: adjacent thinking blocks in a single assistant message are coalesced into one box, matching Pi's native updateContent (and its own test suite). The previous per-entry rendering produced "multiple thinking boxes in a row" whenever the content array carried more than one consecutive thinking entry (which it routinely does).
+- Fix: patched updateContent now sets `this.hasToolCalls` like the original, so assistant messages containing tool calls are no longer wrapped in OSC133 shell-integration zones they were never meant to get.
 ## 0.1.1
 
 - Fix: box now persists for previous (historical) messages, not just the live one. Resumed / switched / forked sessions render history before the extension binds, so their thinking was painted with Pi's native renderer; a repaint after the patch lands re-boxes them.
