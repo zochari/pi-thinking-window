@@ -1,3 +1,7 @@
+## 0.1.4
+
+- Revert: removed the `pi-cursor-sdk`-specific handling from 0.1.3. That provider can emit the same tool call as both a real `toolCall` entry (a proper tool box) and a redundant `thinking`-typed activity trace describing the same call, with no shared identifier between them — so the duplicate can't be reliably detected client-side. Rendering the trace as plain text (0.1.3) just relocated the duplicate from inside the thinking box to a separate line; it didn't remove it. The actual fix belongs upstream in `pi-cursor-sdk` (skip emitting the trace for tools whose real entry is already recorded). The `cursorActivityFix` setting is removed; all thinking content is coalesced and boxed uniformly again, as in 0.1.2.
+
 ## 0.1.3
 
 - Fix: when running under the `pi-cursor-sdk` provider, tool/activity traces that it emits as `thinking` blocks (e.g. "Cursor read did not complete: …") are no longer boxed as model reasoning. They render as a neutral status line instead, so tool activity no longer appears inside the thinking box. Detection is scoped to Cursor's single-line "Cursor <activity>: <summary>" fingerprint, so native providers are unaffected. Toggle with the `cursorActivityFix` setting (default on).
