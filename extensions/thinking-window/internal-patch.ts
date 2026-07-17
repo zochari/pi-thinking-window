@@ -204,53 +204,54 @@ async function installPatch(): Promise<() => void> {
           );
           continue;
         }
-          if (content.type === "thinking") {
-            const tc = content as ThinkingContentLike;
-            // pi-cursor-sdk surfaces inactive/replay tool activity as a `thinking`
-            // block (formatInactiveCursorReplayTrace => single line "Title: Summary",
-            // titled "Cursor <activity>"). Boxing those as model reasoning is wrong,
-            // so render them as a neutral status line instead. The single-line
-            // "Cursor :" fingerprint is Cursor-specific — native providers never emit
-            // thinking shaped like this. Gated by the cursorActivityFix setting.
-            if (getCursorActivityFix() && isCursorToolActivityTrace(tc.thinking ?? "")) {
-              const traceText = (tc.thinking ?? "").replace(/\s+$/, "");
-              if (traceText) {
-                this.contentContainer.addChild(new Text(safeTheme.italic(traceText), 1, 0));
-                this.contentContainer.addChild(new Spacer(1));
-              }
-              continue;
+        if (content.type === "thinking") {
+          const tc = content as ThinkingContentLike;
+          // pi-cursor-sdk surfaces inactive/replay tool activity as a `thinking`
+          // block (formatInactiveCursorReplayTrace => single line "Title: Summary",
+          // titled "Cursor <activity>"). Boxing those as model reasoning is wrong,
+          // so render them as a neutral status line instead. The single-line
+          // "Cursor <activity>: <summary>" fingerprint is Cursor-specific — native
+          // providers never emit thinking shaped like this. Gated by cursorActivityFix.
+          if (getCursorActivityFix() && isCursorToolActivityTrace(tc.thinking ?? "")) {
+            const traceText = (tc.thinking ?? "").replace(/\s+$/, "");
+            if (traceText) {
+              this.contentContainer.addChild(new Text(safeTheme.italic(traceText), 1, 0));
+              this.contentContainer.addChild(new Spacer(1));
             }
-            // Merge the run of consecutive reasoning thinking entries into one box.
-            const thinkingBlocks: string[] = [];
-            for (; i < message.content.length; i++) {
-              const tb = message.content[i] as ThinkingContentLike;
-              if (tb.type !== "thinking") break;
-              // Stop the run at a Cursor tool-activity trace so it isn't merged
-              // into the reasoning box above/below it.
-              if (getCursorActivityFix() && isCursorToolActivityTrace(tb.thinking ?? "")) break;
-              const t = tb.thinking?.trim();
-              if (t || tb.redacted) thinkingBlocks.push(t ?? "");
-            }
-            i--;
-            if (thinkingBlocks.length === 0) continue;
-            const hasVisibleContentAfter = message.content
-              .slice(i + 1)
-              .some(
-                (c) =>
-                  (c.type === "text" && c.text.trim()) ||
-                  (c.type === "thinking" &&
-                    !isCursorToolActivityTrace((c as ThinkingContentLike).thinking ?? "") &&
-                    hasVisibleThinking(c as ThinkingContentLike)),
-              );
-            this.contentContainer.addChild(
-              new ThinkingWindowComponent(
-                safeTheme,
-                thinkingBlocks.join("\n\n"),
-                getBoxHeight(),
-              ),
-            );
-            if (hasVisibleContentAfter) this.contentContainer.addChild(new Spacer(1));
+            continue;
           }
+          // Merge the run of consecutive reasoning thinking entries into one box.
+          const thinkingBlocks: string[] = [];
+          for (; i < message.content.length; i++) {
+            const tb = message.content[i] as ThinkingContentLike;
+            if (tb.type !== "thinking") break;
+            // Stop the run at a Cursor tool-activity trace so it isn't merged
+            // into the reasoning box above/below it.
+            if (getCursorActivityFix() && isCursorToolActivityTrace(tb.thinking ?? "")) break;
+            const t = tb.thinking?.trim();
+            if (t || tb.redacted) thinkingBlocks.push(t ?? "");
+          }
+          i--;
+          if (thinkingBlocks.length === 0) continue;
+          const hasVisibleContentAfter = message.content
+            .slice(i + 1)
+            .some(
+              (c) =>
+                (c.type === "text" && c.text.trim()) ||
+                (c.type === "thinking" &&
+                  !isCursorToolActivityTrace((c as ThinkingContentLike).thinking ?? "") &&
+                  hasVisibleThinking(c as ThinkingContentLike)),
+            );
+          this.contentContainer.addChild(
+            new ThinkingWindowComponent(
+              safeTheme,
+              thinkingBlocks.join("\n\n"),
+              getBoxHeight(),
+            ),
+          );
+          if (hasVisibleContentAfter) this.contentContainer.addChild(new Spacer(1));
+        }
+      }
 
       const hasToolCalls = message.content.some((c) => c.type === "toolCall");
       // Mirror native updateContent: render() uses hasToolCalls to decide OSC133
