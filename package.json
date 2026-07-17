@@ -3,6 +3,10 @@
   "version": "0.1.3",
   "description": "Render Pi's model thinking stream in a fixed-height sliding-window box (TUI).",
   "type": "module",
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
+    "typecheck": "tsc --noEmit"
+  },
   "license": "MIT",
   "author": "zochari",
   "keywords": [
@@ -39,5 +43,8 @@
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
   }
 }

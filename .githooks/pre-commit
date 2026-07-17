@@ -1,0 +1,11 @@
+#!/bin/sh
+# Blocks commits that fail typecheck (catches syntax errors, not just types).
+# Enabled via `npm install` (see package.json "prepare" script), or manually:
+#   git config core.hooksPath .githooks
+set -e
+cd "$(git rev-parse --show-toplevel)"
+if [ ! -d node_modules/typescript ]; then
+  echo "pre-commit: run 'npm install' first (need node_modules/typescript)" >&2
+  exit 1
+fi
+npx tsc --noEmit

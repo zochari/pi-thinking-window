@@ -236,7 +236,7 @@ async function installPatch(): Promise<() => void> {
           const hasVisibleContentAfter = message.content
             .slice(i + 1)
             .some(
-              (c) =>
+              (c: ContentLike) =>
                 (c.type === "text" && c.text.trim()) ||
                 (c.type === "thinking" &&
                   !isCursorToolActivityTrace((c as ThinkingContentLike).thinking ?? "") &&
@@ -253,7 +253,7 @@ async function installPatch(): Promise<() => void> {
         }
       }
 
-      const hasToolCalls = message.content.some((c) => c.type === "toolCall");
+      const hasToolCalls = message.content.some((c: ContentLike) => c.type === "toolCall");
       // Mirror native updateContent: render() uses hasToolCalls to decide OSC133
       // zone wrapping. Without this, assistant messages with tool calls were still
       // wrapped in OSC133 zones (hasToolCalls stayed false all session).
